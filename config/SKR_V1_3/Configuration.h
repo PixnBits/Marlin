@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (c) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
@@ -36,7 +36,7 @@
  * Advanced settings can be found in Configuration_adv.h
  *
  */
-#define CONFIGURATION_H_VERSION 020000
+#define CONFIGURATION_H_VERSION 020005
 
 //===========================================================================
 //============================= Getting Started =============================
@@ -54,6 +54,19 @@
  * http://www.thingiverse.com/thing:298812
  */
 
+//===========================================================================
+//============================= DELTA Printer ===============================
+//===========================================================================
+// For a Delta printer start with one of the configuration files in the
+// config/examples/delta directory and customize for your machine.
+//
+
+//===========================================================================
+//============================= SCARA Printer ===============================
+//===========================================================================
+// For a SCARA printer start with the configuration files in
+// config/examples/SCARA and customize for your machine.
+//
 
 // @section info
 
@@ -86,6 +99,7 @@
 /**
  * Select the serial port on the board to use for communication with the host.
  * This allows the connection of wireless adapters (for instance) to non-default port pins.
+ * Serial port -1 is the USB emulated serial port, if available.
  * Note: The first serial port (-1 or 0) will always be used by the Arduino bootloader.
  *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
@@ -94,9 +108,6 @@
 
 /**
  * Select a secondary serial port on the board to use for communication with the host.
- * This allows the connection of wireless adapters (for instance) to non-default port pins.
- * Serial port -1 is the USB emulated serial port, if available.
- *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
 #define SERIAL_PORT_2 0
@@ -115,9 +126,12 @@
 // might work with TFT screen (https://github.com/bigtreetech/BIGTREETECH-TFT35-V2.0/issues/11#issuecomment-566545628)
 // #define BAUDRATE 115200
 
+// Enable the Bluetooth serial interface on AT90USB devices
+//#define BLUETOOTH
+
 // Choose the name from boards.h that matches your setup
 #ifndef MOTHERBOARD
-  #define MOTHERBOARD BOARD_BIGTREE_SKR_V1_3
+  #define MOTHERBOARD BOARD_BTT_SKR_V1_3
 #endif
 
 // Name displayed in the LCD "Ready" message and Info menu
@@ -130,11 +144,101 @@
 // @section extruder
 
 // This defines the number of extruders
-// :[1, 2, 3, 4, 5, 6]
+// :[1, 2, 3, 4, 5, 6, 7, 8]
 #define EXTRUDERS 1
 
 // Generally expected filament diameter (1.75, 2.85, 3.0, ...). Used for Volumetric, Filament Width Sensor, etc.
 #define DEFAULT_NOMINAL_FILAMENT_DIA 1.75
+
+// For Cyclops or any "multi-extruder" that shares a single nozzle.
+//#define SINGLENOZZLE
+
+/**
+ * Průša MK2 Single Nozzle Multi-Material Multiplexer, and variants.
+ *
+ * This device allows one stepper driver on a control board to drive
+ * two to eight stepper motors, one at a time, in a manner suitable
+ * for extruders.
+ *
+ * This option only allows the multiplexer to switch on tool-change.
+ * Additional options to configure custom E moves are pending.
+ */
+//#define MK2_MULTIPLEXER
+#if ENABLED(MK2_MULTIPLEXER)
+  // Override the default DIO selector pins here, if needed.
+  // Some pins files may provide defaults for these pins.
+  //#define E_MUX0_PIN 40  // Always Required
+  //#define E_MUX1_PIN 42  // Needed for 3 to 8 inputs
+  //#define E_MUX2_PIN 44  // Needed for 5 to 8 inputs
+#endif
+
+/**
+ * Prusa Multi-Material Unit v2
+ *
+ * Requires NOZZLE_PARK_FEATURE to park print head in case MMU unit fails.
+ * Requires EXTRUDERS = 5
+ *
+ * For additional configuration see Configuration_adv.h
+ */
+//#define PRUSA_MMU2
+
+// A dual extruder that uses a single stepper motor
+//#define SWITCHING_EXTRUDER
+#if ENABLED(SWITCHING_EXTRUDER)
+  #define SWITCHING_EXTRUDER_SERVO_NR 0
+  #define SWITCHING_EXTRUDER_SERVO_ANGLES { 0, 90 } // Angles for E0, E1[, E2, E3]
+  #if EXTRUDERS > 3
+    #define SWITCHING_EXTRUDER_E23_SERVO_NR 1
+  #endif
+#endif
+
+// A dual-nozzle that uses a servomotor to raise/lower one (or both) of the nozzles
+//#define SWITCHING_NOZZLE
+#if ENABLED(SWITCHING_NOZZLE)
+  #define SWITCHING_NOZZLE_SERVO_NR 0
+  //#define SWITCHING_NOZZLE_E1_SERVO_NR 1          // If two servos are used, the index of the second
+  #define SWITCHING_NOZZLE_SERVO_ANGLES { 0, 90 }   // Angles for E0, E1 (single servo) or lowered/raised (dual servo)
+#endif
+
+/**
+ * Two separate X-carriages with extruders that connect to a moving part
+ * via a solenoid docking mechanism. Requires SOL1_PIN and SOL2_PIN.
+ */
+//#define PARKING_EXTRUDER
+
+/**
+ * Two separate X-carriages with extruders that connect to a moving part
+ * via a magnetic docking mechanism using movements and no solenoid
+ *
+ * project   : https://www.thingiverse.com/thing:3080893
+ * movements : https://youtu.be/0xCEiG9VS3k
+ *             https://youtu.be/Bqbcs0CU2FE
+ */
+//#define MAGNETIC_PARKING_EXTRUDER
+
+#if EITHER(PARKING_EXTRUDER, MAGNETIC_PARKING_EXTRUDER)
+
+  #define PARKING_EXTRUDER_PARKING_X { -78, 184 }     // X positions for parking the extruders
+  #define PARKING_EXTRUDER_GRAB_DISTANCE 1            // (mm) Distance to move beyond the parking point to grab the extruder
+  //#define MANUAL_SOLENOID_CONTROL                   // Manual control of docking solenoids with M380 S / M381
+
+  #if ENABLED(PARKING_EXTRUDER)
+
+    #define PARKING_EXTRUDER_SOLENOIDS_INVERT           // If enabled, the solenoid is NOT magnetized with applied voltage
+    #define PARKING_EXTRUDER_SOLENOIDS_PINS_ACTIVE LOW  // LOW or HIGH pin signal energizes the coil
+    #define PARKING_EXTRUDER_SOLENOIDS_DELAY 250        // (ms) Delay for magnetic field. No delay if 0 or not defined.
+    //#define MANUAL_SOLENOID_CONTROL                   // Manual control of docking solenoids with M380 S / M381
+
+  #elif ENABLED(MAGNETIC_PARKING_EXTRUDER)
+
+    #define MPE_FAST_SPEED      9000      // (mm/m) Speed for travel before last distance point
+    #define MPE_SLOW_SPEED      4500      // (mm/m) Speed for last distance travel to park and couple
+    #define MPE_TRAVEL_DISTANCE   10      // (mm) Last distance point
+    #define MPE_COMPENSATION       0      // Offset Compensation -1 , 0 , 1 (multiplier) only for coupling
+
+  #endif
+
+#endif
 
 /**
  * Switching Toolhead
@@ -184,6 +288,25 @@
   #endif
 #endif
 
+/**
+ * "Mixing Extruder"
+ *   - Adds G-codes M163 and M164 to set and "commit" the current mix factors.
+ *   - Extends the stepping routines to move multiple steppers in proportion to the mix.
+ *   - Optional support for Repetier Firmware's 'M164 S<index>' supporting virtual tools.
+ *   - This implementation supports up to two mixing extruders.
+ *   - Enable DIRECT_MIXING_IN_G1 for M165 and mixing in G1 (from Pia Taubert's reference implementation).
+ */
+//#define MIXING_EXTRUDER
+#if ENABLED(MIXING_EXTRUDER)
+  #define MIXING_STEPPERS 2        // Number of steppers in your mixing extruder
+  #define MIXING_VIRTUAL_TOOLS 16  // Use the Virtual Tool method with M163 and M164
+  //#define DIRECT_MIXING_IN_G1    // Allow ABCDHI mix factors in G1 movement commands
+  //#define GRADIENT_MIX           // Support for gradient mixing with M166 and LCD
+  #if ENABLED(GRADIENT_MIX)
+    //#define GRADIENT_VTOOL       // Add M166 T to use a V-tool index as a Gradient alias
+  #endif
+#endif
+
 // Offset of the extruders (uncomment if using more than one and relying on firmware to position when changing).
 // The offset has to be X=0, Y=0 for the extruder 0 hotend (default extruder).
 // For the other hotends it is their distance from the extruder 0 hotend.
@@ -203,13 +326,14 @@
 //#define PSU_NAME "Power Supply"
 
 #if ENABLED(PSU_CONTROL)
-  #define PSU_ACTIVE_HIGH false // Set 'false' for ATX (1), 'true' for X-Box (2)
+  #define PSU_ACTIVE_HIGH false     // Set 'false' for ATX, 'true' for X-Box
 
-  //#define PS_DEFAULT_OFF      // Keep power off until enabled directly with M80
+  //#define PSU_DEFAULT_OFF         // Keep power off until enabled directly with M80
+  //#define PSU_POWERUP_DELAY 100   // (ms) Delay for the PSU to warm up to full power
 
-  //#define AUTO_POWER_CONTROL  // Enable automatic control of the PS_ON pin
+  //#define AUTO_POWER_CONTROL      // Enable automatic control of the PS_ON pin
   #if ENABLED(AUTO_POWER_CONTROL)
-    #define AUTO_POWER_FANS           // Turn on PSU if fans need power
+    #define AUTO_POWER_FANS         // Turn on PSU if fans need power
     #define AUTO_POWER_E_FANS
     #define AUTO_POWER_CONTROLLERFAN
     #define AUTO_POWER_CHAMBER_FAN
@@ -237,8 +361,10 @@
  *    -1 : thermocouple with AD595
  *     0 : not used
  *     1 : 100k thermistor - best choice for EPCOS 100k (4.7k pullup)
- *   331 : (3.3V scaled thermistor 1 table)
+ *   331 : (3.3V scaled thermistor 1 table for MEGA)
+ *   332 : (3.3V scaled thermistor 1 table for DUE)
  *     2 : 200k thermistor - ATC Semitec 204GT-2 (4.7k pullup)
+ *   202 : 200k thermistor - Copymaster 3D
  *     3 : Mendel-parts thermistor (4.7k pullup)
  *     4 : 10k thermistor !! do not use it for a hotend. It gives bad resolution at high temp. !!
  *     5 : 100K thermistor - ATC Semitec 104GT-2/104NT-4-R025H42G (Used in ParCan & J-Head) (4.7k pullup)
@@ -255,7 +381,8 @@
  *    13 : 100k Hisens 3950  1% up to 300°C for hotend "Simple ONE " & "Hotend "All In ONE"
  *    15 : 100k thermistor calibration for JGAurora A5 hotend
  *    18 : ATC Semitec 204GT-2 (4.7k pullup) Dagoma.Fr - MKS_Base_DKU001327
- *    20 : Pt100 with circuit in the Ultimainboard V2.x
+ *    20 : Pt100 with circuit in the Ultimainboard V2.x with 5v excitation (AVR)
+ *    21 : Pt100 with circuit in the Ultimainboard V2.x with 3.3v excitation (STM32 \ LPC176x....)
  *   201 : Pt100 with circuit in Overlord, similar to Ultimainboard V2.x
  *    60 : 100k Maker's Tool Works Kapton Bed Thermistor beta=3950
  *    61 : 100k Formbot / Vivedino 3950 350C thermistor 4.7k pullup
@@ -282,17 +409,16 @@
  *   998 : Dummy Table that ALWAYS reads 25°C or the temperature defined below.
  *   999 : Dummy Table that ALWAYS reads 100°C or the temperature defined below.
  */
-// #define TEMP_SENSOR_0 1
-// Makerbot hotend
-// #define TEMP_SENSOR_0 1000
-// E3D V6
 #define TEMP_SENSOR_0 5
 #define TEMP_SENSOR_1 0
 #define TEMP_SENSOR_2 0
 #define TEMP_SENSOR_3 0
 #define TEMP_SENSOR_4 0
 #define TEMP_SENSOR_5 0
+#define TEMP_SENSOR_6 0
+#define TEMP_SENSOR_7 0
 #define TEMP_SENSOR_BED 5
+#define TEMP_SENSOR_PROBE 0
 #define TEMP_SENSOR_CHAMBER 0
 
 // Dummy thermistor constant temperature readings, for use with 998 and 999
@@ -320,20 +446,22 @@
 #define HEATER_3_MINTEMP   5
 #define HEATER_4_MINTEMP   5
 #define HEATER_5_MINTEMP   5
+#define HEATER_6_MINTEMP   5
+#define HEATER_7_MINTEMP   5
 #define BED_MINTEMP        5
 
 // Above this temperature the heater will be switched off.
 // This can protect components from overheating, but NOT from shorts and failures.
 // (Use MINTEMP for thermistor short/failure protection.)
-// #define HEATER_0_MAXTEMP 275
-#define HEATER_0_MAXTEMP 285
+#define HEATER_0_MAXTEMP 275
 #define HEATER_1_MAXTEMP 275
 #define HEATER_2_MAXTEMP 275
 #define HEATER_3_MAXTEMP 275
 #define HEATER_4_MAXTEMP 275
 #define HEATER_5_MAXTEMP 275
+#define HEATER_6_MAXTEMP 275
+#define HEATER_7_MAXTEMP 275
 #define BED_MAXTEMP      150
-// #define BED_MAXTEMP      50
 
 //===========================================================================
 //============================= PID Settings ================================
@@ -348,7 +476,7 @@
 #if ENABLED(PIDTEMP)
   //#define PID_EDIT_MENU         // Add PID editing to the "Advanced Settings" menu. (~700 bytes of PROGMEM)
   //#define PID_AUTOTUNE_MENU     // Add PID auto-tuning to the "Advanced Settings" menu. (~250 bytes of PROGMEM)
-  //#define PID_DEBUG             // Sends debug data to the serial port.
+  //#define PID_DEBUG             // Sends debug data to the serial port. Use 'M303 D' to toggle activation.
   //#define PID_OPENLOOP 1        // Puts PID in open loop. M104/M140 sets the output power from 0 to PID_MAX
   //#define SLOW_PWM_HEATERS      // PWM with very low frequency (roughly 0.125Hz=8s) and minimum state time of approximately 1s useful for heaters driven by a relay
   //#define PID_PARAMS_PER_HOTEND // Uses separate PID parameters for each extruder (useful for mismatched extruders)
@@ -359,14 +487,14 @@
   // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
 
   // Ultimaker
-  //#define DEFAULT_Kp 22.2
-  //#define DEFAULT_Ki 1.08
-  //#define DEFAULT_Kd 114
+  // #define DEFAULT_Kp 22.2
+  // #define DEFAULT_Ki 1.08
+  // #define DEFAULT_Kd 114
 
   // MakerGear
-  // #define DEFAULT_Kp 7.0
-  // #define DEFAULT_Ki 0.1
-  // #define DEFAULT_Kd 12
+  //#define DEFAULT_Kp 7.0
+  //#define DEFAULT_Ki 0.1
+  //#define DEFAULT_Kd 12
 
   // Mendel Parts V9 on 12V
   //#define DEFAULT_Kp 63.0
@@ -479,7 +607,14 @@
 
 // @section machine
 
+// Uncomment one of these options to enable CoreXY, CoreXZ, or CoreYZ kinematics
+// either in the usual order or reversed
 #define COREXY
+//#define COREXZ
+//#define COREYZ
+//#define COREYX
+//#define COREZX
+//#define COREZY
 
 //===========================================================================
 //============================== Endstop Settings ===========================
@@ -493,9 +628,9 @@
 #define USE_XMIN_PLUG
 #define USE_YMIN_PLUG
 #define USE_ZMIN_PLUG
-// #define USE_XMAX_PLUG
-// #define USE_YMAX_PLUG
-// #define USE_ZMAX_PLUG
+//#define USE_XMAX_PLUG
+//#define USE_YMAX_PLUG
+//#define USE_ZMAX_PLUG
 
 // Enable pullup for all endstops to prevent a floating state
 #define ENDSTOPPULLUPS
@@ -540,19 +675,30 @@
  *
  * A4988 is assumed for unspecified drivers.
  *
- * Options: A4988, A5984, DRV8825, LV8729, L6470, TB6560, TB6600, TMC2100,
+ * Options: A4988, A5984, DRV8825, LV8729, L6470, L6474, POWERSTEP01,
+ *          TB6560, TB6600, TMC2100,
  *          TMC2130, TMC2130_STANDALONE, TMC2160, TMC2160_STANDALONE,
  *          TMC2208, TMC2208_STANDALONE, TMC2209, TMC2209_STANDALONE,
  *          TMC26X,  TMC26X_STANDALONE,  TMC2660, TMC2660_STANDALONE,
  *          TMC5130, TMC5130_STANDALONE, TMC5160, TMC5160_STANDALONE
- * :['A4988', 'A5984', 'DRV8825', 'LV8729', 'L6470', 'TB6560', 'TB6600', 'TMC2100', 'TMC2130', 'TMC2130_STANDALONE', 'TMC2160', 'TMC2160_STANDALONE', 'TMC2208', 'TMC2208_STANDALONE', 'TMC2209', 'TMC2209_STANDALONE', 'TMC26X', 'TMC26X_STANDALONE', 'TMC2660', 'TMC2660_STANDALONE', 'TMC5130', 'TMC5130_STANDALONE', 'TMC5160', 'TMC5160_STANDALONE']
+ * :['A4988', 'A5984', 'DRV8825', 'LV8729', 'L6470', 'L6474', 'POWERSTEP01', 'TB6560', 'TB6600', 'TMC2100', 'TMC2130', 'TMC2130_STANDALONE', 'TMC2160', 'TMC2160_STANDALONE', 'TMC2208', 'TMC2208_STANDALONE', 'TMC2209', 'TMC2209_STANDALONE', 'TMC26X', 'TMC26X_STANDALONE', 'TMC2660', 'TMC2660_STANDALONE', 'TMC5130', 'TMC5130_STANDALONE', 'TMC5160', 'TMC5160_STANDALONE']
  */
 #define X_DRIVER_TYPE  TMC2208
 #define Y_DRIVER_TYPE  TMC2208
 #define Z_DRIVER_TYPE  TMC2208
+//#define X2_DRIVER_TYPE A4988
+//#define Y2_DRIVER_TYPE A4988
 #define Z2_DRIVER_TYPE TMC2208
+//#define Z3_DRIVER_TYPE A4988
+//#define Z4_DRIVER_TYPE A4988
 #define E0_DRIVER_TYPE TMC2208
 #define E1_DRIVER_TYPE TMC2208
+//#define E2_DRIVER_TYPE A4988
+//#define E3_DRIVER_TYPE A4988
+//#define E4_DRIVER_TYPE A4988
+//#define E5_DRIVER_TYPE A4988
+//#define E6_DRIVER_TYPE A4988
+//#define E7_DRIVER_TYPE A4988
 
 // Enable this feature if all enabled endstop pins are interrupt-capable.
 // This will remove the need to poll the interrupt pins, saving many CPU cycles.
@@ -597,7 +743,6 @@
  * Override with M92
  *                                      X, Y, Z, E0 [, E1[, E2...]]
  */
-//#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 4000, 500 }
 #define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 430, 116 }
 
 /**
@@ -605,7 +750,6 @@
  * Override with M203
  *                                      X, Y, Z, E0 [, E1[, E2...]]
  */
-// #define DEFAULT_MAX_FEEDRATE          { 300, 300, 5, 25 }
 #define DEFAULT_MAX_FEEDRATE          { 300, 300, 50, 25 }
 
 //#define LIMITED_MAX_FR_EDITING        // Limit edit via M203 or LCD to DEFAULT_MAX_FEEDRATE * 2
@@ -620,7 +764,7 @@
  *                                      X, Y, Z, E0 [, E1[, E2...]]
  */
 // #define DEFAULT_MAX_ACCELERATION      { 3000, 3000, 100, 10000 }
-#define DEFAULT_MAX_ACCELERATION      { 300, 300, 10, 1000 }
+#define DEFAULT_MAX_ACCELERATION      { 100, 100, 10, 10000 }
 
 //#define LIMITED_MAX_ACCEL_EDITING     // Limit edit via M201 or LCD to DEFAULT_MAX_ACCELERATION * 2
 #if ENABLED(LIMITED_MAX_ACCEL_EDITING)
@@ -636,11 +780,11 @@
  *   M204 T    Travel Acceleration
  */
 // #define DEFAULT_ACCELERATION          3000    // X, Y, Z and E acceleration for printing moves
-#define DEFAULT_ACCELERATION          300    // X, Y, Z and E acceleration for printing moves
+#define DEFAULT_ACCELERATION          100    // X, Y, Z and E acceleration for printing moves
 // #define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
-#define DEFAULT_RETRACT_ACCELERATION  300    // E acceleration for retracts
+#define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
 // #define DEFAULT_TRAVEL_ACCELERATION   3000    // X, Y, Z acceleration for travel (non printing) moves
-#define DEFAULT_TRAVEL_ACCELERATION   300    // X, Y, Z acceleration for travel (non printing) moves
+#define DEFAULT_TRAVEL_ACCELERATION   100    // X, Y, Z acceleration for travel (non printing) moves
 
 /**
  * Default Jerk limits (mm/s)
@@ -655,6 +799,8 @@
   #define DEFAULT_XJERK 10.0
   #define DEFAULT_YJERK 10.0
   #define DEFAULT_ZJERK  0.3
+
+  //#define TRAVEL_EXTRA_XYJERK 0.0     // Additional jerk allowance for all travel moves
 
   //#define LIMITED_JERK_EDITING        // Limit edit via M205 or LCD to DEFAULT_aJERK * 2
   #if ENABLED(LIMITED_JERK_EDITING)
@@ -741,6 +887,12 @@
 //#define FIX_MOUNTED_PROBE
 
 /**
+ * Use the nozzle as the probe, as with a conductive
+ * nozzle system or a piezo-electric smart effector.
+ */
+//#define NOZZLE_AS_PROBE
+
+/**
  * Z Servo Probe, such as an endstop switch on a rotating arm.
  */
 //#define Z_PROBE_SERVO_NR 0       // Defaults to SERVO 0 connector.
@@ -782,6 +934,21 @@
   #define Z_PROBE_RETRACT_X X_MAX_POS
 #endif
 
+// Duet Smart Effector (for delta printers) - https://bit.ly/2ul5U7J
+// When the pin is defined you can use M672 to set/reset the probe sensivity.
+//#define DUET_SMART_EFFECTOR
+#if ENABLED(DUET_SMART_EFFECTOR)
+  #define SMART_EFFECTOR_MOD_PIN  -1  // Connect a GPIO pin to the Smart Effector MOD pin
+#endif
+
+/**
+ * Use StallGuard2 to probe the bed with the nozzle.
+ * Requires stallGuard-capable Trinamic stepper drivers.
+ * CAUTION: This can damage machines with Z lead screws.
+ *          Take extreme care when setting up this feature.
+ */
+//#define SENSORLESS_PROBING
+
 //
 // For Z_PROBE_ALLEN_KEY see the Delta example configurations.
 //
@@ -806,11 +973,10 @@
  *
  * Specify a Probe position as { X, Y, Z }
  */
-// #define NOZZLE_TO_PROBE_OFFSET { 10, 10, 0 }
-// #define NOZZLE_TO_PROBE_OFFSET { 20, 0, -1.1 }
 #define NOZZLE_TO_PROBE_OFFSET { 20, 0, -1.0 }
 
-// Certain types of probes need to stay away from edges
+// Most probes should stay away from the edges of the bed, but
+// with NOZZLE_AS_PROBE this can be negative for a wider probing area.
 #define MIN_PROBE_EDGE 10
 
 // X and Y axis travel speed (mm/m) between probes
@@ -920,15 +1086,19 @@
 #define INVERT_E3_DIR false
 #define INVERT_E4_DIR false
 #define INVERT_E5_DIR false
+#define INVERT_E6_DIR false
+#define INVERT_E7_DIR false
 
 // @section homing
 
-//#define NO_MOTION_BEFORE_HOMING  // Inhibit movement until all axes have been homed
+//#define NO_MOTION_BEFORE_HOMING // Inhibit movement until all axes have been homed
 
-//#define UNKNOWN_Z_NO_RAISE // Don't raise Z (lower the bed) if Z is "unknown." For beds that fall when Z is powered off.
+//#define UNKNOWN_Z_NO_RAISE      // Don't raise Z (lower the bed) if Z is "unknown." For beds that fall when Z is powered off.
 
-//#define Z_HOMING_HEIGHT 4  // (mm) Minimal Z height before homing (G28) for Z clearance above the bed, clamps, ...
-                             // Be sure you have this distance over your Z_MAX_POS in case.
+//#define Z_HOMING_HEIGHT  4      // (mm) Minimal Z height before homing (G28) for Z clearance above the bed, clamps, ...
+                                  // Be sure to have this much clearance over your Z_MAX_POS to prevent grinding.
+
+//#define Z_AFTER_HOMING  10      // (mm) Height to move to after homing Z
 
 // Direction of endstops when homing; 1=MAX, -1=MIN
 // :[-1,1]
@@ -1090,6 +1260,7 @@
     #define MESH_TEST_HOTEND_TEMP  205    // (°C) Default nozzle temperature for the G26 Mesh Validation Tool.
     #define MESH_TEST_BED_TEMP      60    // (°C) Default bed temperature for the G26 Mesh Validation Tool.
     #define G26_XY_FEEDRATE         20    // (mm/s) Feedrate for XY Moves for the G26 Mesh Validation Tool.
+    #define G26_RETRACT_MULTIPLIER   1.0  // G26 Q (retraction) used by default between mesh test elements.
   #endif
 
 #endif
@@ -1169,10 +1340,10 @@
 //#define LEVEL_BED_CORNERS
 
 #if ENABLED(LEVEL_BED_CORNERS)
-  #define LEVEL_CORNERS_INSET 30    // (mm) An inset for corner leveling
-  #define LEVEL_CORNERS_Z_HOP  4.0  // (mm) Move nozzle up before moving between corners
-  #define LEVEL_CORNERS_HEIGHT 0.0  // (mm) Z height of nozzle at leveling points
-  //#define LEVEL_CENTER_TOO        // Move to the center after the last corner
+  #define LEVEL_CORNERS_INSET_LFRB { 50, 50, 50, 50 } // (mm) Left, Front, Right, Back insets
+  #define LEVEL_CORNERS_HEIGHT      0.0   // (mm) Z height of nozzle at leveling points
+  #define LEVEL_CORNERS_Z_HOP       4.0   // (mm) Z height of nozzle between leveling points
+  #define LEVEL_CENTER_TOO              // Move to the center after the last corner
 #endif
 
 /**
@@ -1291,6 +1462,7 @@
 #define EEPROM_SETTINGS     // Persistent storage with M500 and M501
 //#define DISABLE_M503        // Saves ~2700 bytes of PROGMEM. Disable for release!
 #define EEPROM_CHITCHAT       // Give feedback on EEPROM commands. Disable to save PROGMEM.
+// #define EEPROM_BOOT_SILENT    // Keep M503 quiet and only give errors during first load
 #if ENABLED(EEPROM_SETTINGS)
   //#define EEPROM_AUTO_INIT  // Init EEPROM automatically on any errors.
 #endif
@@ -1304,11 +1476,6 @@
 #define HOST_KEEPALIVE_FEATURE        // Disable this if your host doesn't like keepalive messages
 #define DEFAULT_KEEPALIVE_INTERVAL 2  // Number of seconds between "busy" messages. Set with M113.
 #define BUSY_WHILE_HEATING            // Some hosts require "busy" messages even during heating
-
-//
-// M100 Free Memory Watcher
-//
-//#define M100_FREE_MEMORY_WATCHER    // Add M100 (Free Memory Watcher) to debug memory usage
 
 //
 // G20/G21 Inch mode support
@@ -1400,9 +1567,10 @@
   // Default number of triangles
   #define NOZZLE_CLEAN_TRIANGLES  3
 
-  // Specify positions as { X, Y, Z }
-  #define NOZZLE_CLEAN_START_POINT {  30, 30, (Z_MIN_POS + 1) }
-  #define NOZZLE_CLEAN_END_POINT   { 100, 60, (Z_MIN_POS + 1) }
+  // Specify positions for each tool as { { X, Y, Z }, { X, Y, Z } }
+  // Dual hotend system may use { {  -20, (Y_BED_SIZE / 2), (Z_MIN_POS + 1) },  {  420, (Y_BED_SIZE / 2), (Z_MIN_POS + 1) }}
+  #define NOZZLE_CLEAN_START_POINT { {  30, 30, (Z_MIN_POS + 1) } }
+  #define NOZZLE_CLEAN_END_POINT   { { 100, 60, (Z_MIN_POS + 1) } }
 
   // Circular pattern radius
   #define NOZZLE_CLEAN_CIRCLE_RADIUS 6.5
@@ -1656,7 +1824,7 @@
 
 //
 // Makeboard 3D Printer Parts 3D Printer Mini Display 1602 Mini Controller
-// https://www.aliexpress.com/item/Micromake-Makeboard-3D-Printer-Parts-3D-Printer-Mini-Display-1602-Mini-Controller-Compatible-with-Ramps-1/32765887917.html
+// https://www.aliexpress.com/item/32765887917.html
 //
 //#define MAKEBOARD_MINI_2_LINE_DISPLAY_1602
 
@@ -1823,19 +1991,25 @@
 // FYSETC variant of the MINI12864 graphic controller with SD support
 // https://wiki.fysetc.com/Mini12864_Panel/
 //
-//#define FYSETC_MINI_12864_X_X  // Type C/D/E/F. No tunable RGB Backlight by default
-//#define FYSETC_MINI_12864_1_2  // Type C/D/E/F. Simple RGB Backlight (always on)
-//#define FYSETC_MINI_12864_2_0  // Type A/B. Discreet RGB Backlight
-//#define FYSETC_MINI_12864_2_1  // Type A/B. Neopixel RGB Backlight
+//#define FYSETC_MINI_12864_X_X    // Type C/D/E/F. No tunable RGB Backlight by default
+//#define FYSETC_MINI_12864_1_2    // Type C/D/E/F. Simple RGB Backlight (always on)
+//#define FYSETC_MINI_12864_2_0    // Type A/B. Discreet RGB Backlight
+//#define FYSETC_MINI_12864_2_1    // Type A/B. Neopixel RGB Backlight
+//#define FYSETC_GENERIC_12864_1_1 // Larger display with basic ON/OFF backlight.
 
 //
 // Factory display for Creality CR-10
-// https://www.aliexpress.com/item/Universal-LCD-12864-3D-Printer-Display-Screen-With-Encoder-For-CR-10-CR-7-Model/32833148327.html
+// https://www.aliexpress.com/item/32833148327.html
 //
 // This is RAMPS-compatible using a single 10-pin connector.
 // (For CR-10 owners who want to replace the Melzi Creality board but retain the display)
 //
 //#define CR10_STOCKDISPLAY
+
+//
+// Ender-2 OEM display, a variant of the MKS_MINI_12864
+//
+//#define ENDER2_STOCKDISPLAY
 
 //
 // ANET and Tronxy Graphical Controller
@@ -1848,7 +2022,7 @@
 
 //
 // AZSMZ 12864 LCD with SD
-// https://www.aliexpress.com/store/product/3D-printer-smart-controller-SMART-RAMPS-OR-RAMPS-1-4-LCD-12864-LCD-control-panel-green/2179173_32213636460.html
+// https://www.aliexpress.com/item/32837222770.html
 //
 //#define AZSMZ_12864
 
@@ -1905,9 +2079,11 @@
 //=============================================================================
 
 //
-// DGUS Touch Display with DWIN OS
+// DGUS Touch Display with DWIN OS. (Choose one.)
 //
-//#define DGUS_LCD
+//#define DGUS_LCD_UI_ORIGIN
+//#define DGUS_LCD_UI_FYSETC
+//#define DGUS_LCD_UI_HIPRECY
 
 //
 // Touch-screen LCD for Malyan M200 printers
