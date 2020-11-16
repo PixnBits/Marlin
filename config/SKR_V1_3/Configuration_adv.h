@@ -523,9 +523,10 @@
 #define NUM_Z_STEPPER_DRIVERS 2   // (1-4) Z options change based on how many
 
 #if NUM_Z_STEPPER_DRIVERS > 1
-  //#define Z_MULTI_ENDSTOPS
+  // #define Z_MULTI_ENDSTOPS
   #if ENABLED(Z_MULTI_ENDSTOPS)
-    #define Z2_USE_ENDSTOP          _XMAX_
+    // #define Z2_USE_ENDSTOP          _XMAX_
+    #define Z2_USE_ENDSTOP          _ZMIN_
     #define Z2_ENDSTOP_ADJUSTMENT   0
     #if NUM_Z_STEPPER_DRIVERS >= 3
       #define Z3_USE_ENDSTOP        _YMAX_
@@ -678,12 +679,14 @@
  * Z Steppers Auto-Alignment
  * Add the G34 command to align multiple Z steppers using a bed probe.
  */
-//#define Z_STEPPER_AUTO_ALIGN
+#define Z_STEPPER_AUTO_ALIGN
 #if ENABLED(Z_STEPPER_AUTO_ALIGN)
   // Define probe X and Y positions for Z1, Z2 [, Z3 [, Z4]]
   // If not defined, probe limits will be used.
   // Override with 'M422 S<index> X<pos> Y<pos>'
-  //#define Z_STEPPER_ALIGN_XY { {  10, 190 }, { 100,  10 }, { 190, 190 } }
+  // #define Z_STEPPER_ALIGN_XY { {  10, 190 }, { 100,  10 }, { 190, 190 } }
+  // NOZZLE_TO_PROBE_OFFSET has 20 for X, but we can't use that value here directly
+  #define Z_STEPPER_ALIGN_XY { { X_MIN_POS + 20, Y_BED_SIZE/2 }, { X_MAX_POS - 22, Y_BED_SIZE/2 } }
 
   /**
    * Orientation for the automatically-calculated probe positions.
@@ -1953,13 +1956,15 @@
   #endif
 
   #if AXIS_DRIVER_TYPE_Z(TMC26X)
-    #define Z_MAX_CURRENT     1000
+    // #define Z_MAX_CURRENT     1000
+    #define Z_MAX_CURRENT     1200
     #define Z_SENSE_RESISTOR    91
     #define Z_MICROSTEPS        16
   #endif
 
   #if AXIS_DRIVER_TYPE_Z2(TMC26X)
-    #define Z2_MAX_CURRENT    1000
+    // #define Z2_MAX_CURRENT    1000
+    #define Z2_MAX_CURRENT    1200
     #define Z2_SENSE_RESISTOR   91
     #define Z2_MICROSTEPS       16
   #endif
@@ -1977,7 +1982,8 @@
   #endif
 
   #if AXIS_DRIVER_TYPE_E0(TMC26X)
-    #define E0_MAX_CURRENT    1000
+    // #define E0_MAX_CURRENT    1000
+    #define E0_MAX_CURRENT    1200
     #define E0_SENSE_RESISTOR   91
     #define E0_MICROSTEPS       16
   #endif
@@ -2052,7 +2058,7 @@
   #if AXIS_IS_TMC(X)
     // #define X_CURRENT       800        // (mA) RMS current. Multiply by 1.414 for peak current.
     // X & Y have 1.7A motors, 1.7/1.414 is a little over 1.2
-    #define X_CURRENT       1200        // (mA) RMS current. Multiply by 1.414 for peak current.
+    #define X_CURRENT       1000        // (mA) RMS current. Multiply by 1.414 for peak current.
     #define X_CURRENT_HOME  X_CURRENT  // (mA) RMS current for sensorless homing
     #define X_MICROSTEPS     16    // 0..256
     #define X_RSENSE          0.11
@@ -2060,8 +2066,7 @@
   #endif
 
   #if AXIS_IS_TMC(X2)
-    // #define X2_CURRENT      800
-    #define X2_CURRENT      1200
+    #define X2_CURRENT      800
     #define X2_CURRENT_HOME X2_CURRENT
     #define X2_MICROSTEPS    16
     #define X2_RSENSE         0.11
@@ -2070,8 +2075,8 @@
 
   #if AXIS_IS_TMC(Y)
     // #define Y_CURRENT       800
-    // X & Y have 1.7A motors, 1.7/1.414 is a little over 1.2
-    #define Y_CURRENT       1200
+    // CoreXY
+    #define Y_CURRENT       X_CURRENT
     #define Y_CURRENT_HOME  Y_CURRENT
     #define Y_MICROSTEPS     16
     #define Y_RSENSE          0.11
@@ -2088,7 +2093,8 @@
   #endif
 
   #if AXIS_IS_TMC(Z)
-    #define Z_CURRENT       800
+    // #define Z_CURRENT       800
+    #define Z_CURRENT       1200
     #define Z_CURRENT_HOME  Z_CURRENT
     #define Z_MICROSTEPS     16
     #define Z_RSENSE          0.11
@@ -2096,7 +2102,8 @@
   #endif
 
   #if AXIS_IS_TMC(Z2)
-    #define Z2_CURRENT      800
+    // #define Z2_CURRENT      800
+    #define Z2_CURRENT      Z_CURRENT
     #define Z2_CURRENT_HOME Z2_CURRENT
     #define Z2_MICROSTEPS    16
     #define Z2_RSENSE         0.11
@@ -2120,7 +2127,8 @@
   #endif
 
   #if AXIS_IS_TMC(E0)
-    #define E0_CURRENT      800
+    // #define E0_CURRENT      800
+    #define E0_CURRENT      1000
     #define E0_MICROSTEPS    16
     #define E0_RSENSE         0.11
     #define E0_CHAIN_POS     -1

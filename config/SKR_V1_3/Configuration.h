@@ -461,8 +461,8 @@
 #define HEATER_5_MAXTEMP 275
 #define HEATER_6_MAXTEMP 275
 #define HEATER_7_MAXTEMP 275
-// #define BED_MAXTEMP      150
-#define BED_MAXTEMP      45
+#define BED_MAXTEMP      150
+// #define BED_MAXTEMP      45
 
 //===========================================================================
 //============================= PID Settings ================================
@@ -744,19 +744,24 @@
  * Override with M92
  *                                      X, Y, Z, E0 [, E1[, E2...]]
  */
-#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 430, 116 }
+#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 430, 97.684 }
 
 /**
  * Default Max Feed Rate (mm/s)
  * Override with M203
  *                                      X, Y, Z, E0 [, E1[, E2...]]
  */
-#define DEFAULT_MAX_FEEDRATE          { 300, 300, 50, 25 }
+// #define DEFAULT_MAX_FEEDRATE          { 300, 300, 5, 25 }
+// X & Y with current at 1200mA (RMS) get to 11800, limitor is the bearings used I think
+// Z unloaded going up is touchy (one side skips, goes diagonal, stressing printed mounts) past 1400
+// [in mm/s] E0*pi*(1.75/2)^2 stepping = 60mm/s*pi*(0.2/2)^2 extruding -> E0 = 0.784mm/s, ~47mm/min
+// [in mm/s] E0*pi*(1.75/2)^2 stepping = 60mm/s*pi*(0.4/2)^2 extruding -> E0 = 3.135mm/s, ~188mm/min
+#define DEFAULT_MAX_FEEDRATE          { 11000, 11000, 1400, 200 }
 
 //#define LIMITED_MAX_FR_EDITING        // Limit edit via M203 or LCD to DEFAULT_MAX_FEEDRATE * 2
-#if ENABLED(LIMITED_MAX_FR_EDITING)
-  #define MAX_FEEDRATE_EDIT_VALUES    { 600, 600, 10, 50 } // ...or, set your own edit limits
-#endif
+// #if ENABLED(LIMITED_MAX_FR_EDITING)
+//   #define MAX_FEEDRATE_EDIT_VALUES    { 600, 600, 10, 50 } // ...or, set your own edit limits
+// #endif
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
@@ -974,11 +979,12 @@
  *
  * Specify a Probe position as { X, Y, Z }
  */
-#define NOZZLE_TO_PROBE_OFFSET { 20, 0, -1.0 }
+#define NOZZLE_TO_PROBE_OFFSET { 20, 0, -2.4 }
 
 // Most probes should stay away from the edges of the bed, but
 // with NOZZLE_AS_PROBE this can be negative for a wider probing area.
-#define MIN_PROBE_EDGE 10
+// #define MIN_PROBE_EDGE 10
+#define MIN_PROBE_EDGE 0
 
 // X and Y axis travel speed (mm/m) between probes
 #define XY_PROBE_SPEED 8000
@@ -1110,8 +1116,12 @@
 // @section machine
 
 // The size of the print bed
-#define X_BED_SIZE 600
-#define Y_BED_SIZE 660
+// #define X_BED_SIZE 600
+// movement and bed is bigger than originally designed
+#define X_BED_SIZE 605
+// #define Y_BED_SIZE 660
+// bed is smaller than movement area
+#define Y_BED_SIZE 605
 
 // Travel limits (mm) after homing, corresponding to endstop positions.
 #define X_MIN_POS 0
@@ -1119,7 +1129,8 @@
 #define Z_MIN_POS 0
 #define X_MAX_POS X_BED_SIZE
 #define Y_MAX_POS Y_BED_SIZE
-#define Z_MAX_POS 600
+// #define Z_MAX_POS 600
+#define Z_MAX_POS 540
 
 /**
  * Software Endstops
